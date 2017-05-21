@@ -95,3 +95,6 @@ crashlytics.properties
 crashlytics-build.properties
 
 fabric.properties
+
+dist/
+node_modules/
