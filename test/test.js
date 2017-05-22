@@ -20,7 +20,17 @@ function getArbitraryStation() {
 describe('Station', function () {
     let firstStation = null;
     before(function () {
-        firstStation = new DataCollection.MetroStation('triangle');
+        firstStation = new DataCollection.MetroStation('triangle', 30, -25);
+    });
+    describe("Create position", function () {
+        it('should has correct position', function () {
+            assert.equal(firstStation.position.x, 30);
+            assert.equal(firstStation.position.y, -25);
+        });
+        it('should update boundary correctly', function () {
+            assert.equal(DataCollection.Data.boundary.x, 30);
+            assert.equal(DataCollection.Data.boundary.y, 25);
+        });
     });
     describe("Create station", function () {
         it('should be added an id by Data', function () {

@@ -35,19 +35,33 @@ class Data{
         Data.numTypes[stationToRemove.type]--;
         return stationToRemove;
     }
+    static updateBoundary(x, y) {
+        if (x > Data.boundary.x || x < -Data.boundary.x) {
+            Data.boundary.x = Math.abs(x);
+        }
+        if (y > Data.boundary.y || y < -Data.boundary.y) {
+            Data.boundary.y = Math.abs(y);
+        }
+    }
 }
+// ID management
 Data.nextStationId = 0;
+// numTypes
 Data._numTypes = {};
 Data.numTypes = new Proxy(Data._numTypes, {
     get (receiver, name) {
         return receiver[name] === undefined ? 0 : receiver[name];
     }
 });
+// boundary
+Data.boundary = {x : 0, y : 0};
 exports.Data = Data;
 
 class Point extends Data{
-    constructor() {
+    constructor(x, y) {
         super();
+        this.position = {x : x, y : y};
+        Data.updateBoundary(x, y);
     }
 }
 exports.Point = Point;
@@ -95,8 +109,8 @@ class MetroStation extends Point {
     get type() {
         return this._type;
     }
-    constructor(type) {
-        super();
+    constructor(type, x, y) {
+        super(x, y);
         Data.regStation(this);
         this.type = type;
     }
