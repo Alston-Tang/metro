@@ -11,7 +11,7 @@ class Data{
         if (Data.stations === undefined) {
             Data.stations = {};
         }
-        station.id = Data.nextId++;
+        station.id = Data.nextStationId++;
         Data.stations[station.id] = station;
     }
     static changeStationType(station, newType) {
@@ -36,7 +36,7 @@ class Data{
         return stationToRemove;
     }
 }
-Data.nextId = 0;
+Data.nextStationId = 0;
 Data._numTypes = {};
 Data.numTypes = new Proxy(Data._numTypes, {
     get (receiver, name) {
