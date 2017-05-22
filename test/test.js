@@ -8,9 +8,21 @@ let assert = require('chai').assert;
 
 let DataCollection = require('../js/data');
 
+function getArbitraryStation() {
+    for (let id in DataCollection.Data.stations) {
+        if (DataCollection.Data.stations.hasOwnProperty(id)) {
+            return DataCollection.Data.stations[id];
+        }
+    }
+    return null;
+}
+
 describe('Station', function () {
+    let firstStation = null;
+    before(function () {
+        firstStation = new DataCollection.MetroStation('triangle');
+    });
     describe("Create station", function () {
-        let firstStation = new DataCollection.MetroStation('triangle');
         it('should be added an id by Data', function () {
             assert.isNumber(firstStation.id, "ID is " + firstStation.id);
         });
@@ -23,9 +35,14 @@ describe('Station', function () {
         })
     });
     describe("Modify type", function () {
-        let aStation = DataCollection.Data.stations[0];
-        let prevType = aStation.type;
-        let numPrevType = DataCollection.Data.numTypes[aStation.type];
+        let aStation = null;
+        let prevType = null;
+        let numPrevType = -1;
+        before(function () {
+            aStation = getArbitraryStation();
+            prevType = aStation.type;
+            numPrevType = DataCollection.Data.numTypes[aStation.type];
+        });
         it ('should make no difference if new type is equal to old one', function () {
             aStation.type = prevType;
             assert.equal(DataCollection.Data.stations[aStation.id].type, prevType);
@@ -39,5 +56,22 @@ describe('Station', function () {
             assert.equal(DataCollection.Data.numTypes[prevType], numPrevType - 1);
             assert.equal(DataCollection.Data.numTypes[newType], numNewType + 1);
         });
-    })
+    });
+    describe("Remove station", function () {
+        let stationToRemove = null;
+        let prevType = null;
+        let numPrevType = -1;
+        before(function () {
+            stationToRemove = getArbitraryStation();
+            prevType = getArbitraryStation().type;
+            numPrevType = DataCollection.Data.numTypes[prevType];
+            DataCollection.Data.removeStation(stationToRemove.id);
+        });
+        it ('should set field to undefined', function () {
+            assert.equal(DataCollection.Data.stations[stationToRemove.id] === undefined, true);
+        });
+        it ('shuold decrease type count', function () {
+            assert.equal(DataCollection.Data.numTypes[prevType], numPrevType - 1);
+        });
+    });
 });

@@ -9,10 +9,10 @@ class Data{
     constructor(){};
     static regStation(station) {
         if (Data.stations === undefined) {
-            Data.stations = [];
+            Data.stations = {};
         }
-        station.id = Data.stations.length;
-        Data.stations.push(station);
+        station.id = Data.nextId++;
+        Data.stations[station.id] = station;
     }
     static changeStationType(station, newType) {
         if (Data._numTypes[newType] === undefined) {
@@ -24,7 +24,19 @@ class Data{
         }
         Data._numTypes[newType]++;
     }
+    /*
+        Return null if stationId is invalid
+        Return instance removed if succeed
+    */
+    static removeStation(stationId) {
+        if (! stationId in Data.stations) return null;
+        let stationToRemove = Data.stations[stationId];
+        delete Data.stations[stationId];
+        Data.numTypes[stationToRemove.type]--;
+        return stationToRemove;
+    }
 }
+Data.nextId = 0;
 Data._numTypes = {};
 Data.numTypes = new Proxy(Data._numTypes, {
     get (receiver, name) {
