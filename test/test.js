@@ -10,10 +10,7 @@ let DataCollection = require('../js/data');
 
 describe('Station', function () {
     describe("Create station", function () {
-        let firstStation = null;
-        before(function () {
-            firstStation = new DataCollection.MetroStation('triangle');
-        });
+        let firstStation = new DataCollection.MetroStation('triangle');
         it('should be added an id by Data', function () {
             assert.isNumber(firstStation.id, "ID is " + firstStation.id);
         });
@@ -25,4 +22,22 @@ describe('Station', function () {
             assert.equal(DataCollection.Data.numTypes.triangle, 1);
         })
     });
+    describe("Modify type", function () {
+        let aStation = DataCollection.Data.stations[0];
+        let prevType = aStation.type;
+        let numPrevType = DataCollection.Data.numTypes[aStation.type];
+        it ('should make no difference if new type is equal to old one', function () {
+            aStation.type = prevType;
+            assert.equal(DataCollection.Data.stations[aStation.id].type, prevType);
+            assert.equal(DataCollection.Data.numTypes[prevType], numPrevType);
+        });
+        it ('should make difference if new type is not equal to old one', function () {
+            let newType = prevType + '_new';
+            let numNewType = DataCollection.Data.numTypes[newType];
+            aStation.type = newType;
+            assert.equal(DataCollection.Data.stations[aStation.id].type, newType);
+            assert.equal(DataCollection.Data.numTypes[prevType], numPrevType - 1);
+            assert.equal(DataCollection.Data.numTypes[newType], numNewType + 1);
+        });
+    })
 });

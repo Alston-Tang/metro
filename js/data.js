@@ -15,19 +15,22 @@ class Data{
         Data.stations.push(station);
     }
     static changeStationType(station, newType) {
-        if (Data.numTypes === undefined) {
-            Data.numTypes = {};
-        }
-        if (Data.numTypes[newType] === undefined) {
-            Data.numTypes[newType] = 0;
+        if (Data._numTypes[newType] === undefined) {
+            Data._numTypes[newType] = 0;
         }
         if (station.type !== undefined) {
-            // numTypes[station.type] is impossible to be undefined if station.type !== undefined
-            Data.numTypes[station.type]--;
+            // _numTypes[station.type] is impossible to be undefined if station.type !== undefined
+            Data._numTypes[station.type]--;
         }
-        Data.numTypes[newType]++;
+        Data._numTypes[newType]++;
     }
 }
+Data._numTypes = {};
+Data.numTypes = new Proxy(Data._numTypes, {
+    get (receiver, name) {
+        return receiver[name] === undefined ? 0 : receiver[name];
+    }
+});
 exports.Data = Data;
 
 class Point extends Data{
