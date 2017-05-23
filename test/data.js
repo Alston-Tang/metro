@@ -110,5 +110,35 @@ describe('Data', function () {
                 assert.equal(DataCollection.Data.lines[firstLine.id], firstLine);
             });
         });
+        describe("Expand line", function () {
+            let thirdStation = null;
+            let fourthStation = null;
+            before(function () {
+               thirdStation = new DataCollection.MetroStation('rectangle', 0, 0);
+               fourthStation = new DataCollection.MetroStation('rectangle', 0, -25);
+            });
+            it('should add third station to the tail', function () {
+                assert.equal(firstLine.expand(thirdStation, 'tail'), true);
+                assert.equal(firstLine.linkTail.val, thirdStation);
+                assert.equal(firstLine.linkTail.prev.val, secondStation);
+                assert.equal(firstLine.linkTail.prev.next.val, thirdStation);
+            });
+            it('should add fourth station to the head', function () {
+                assert.equal(firstLine.expand(fourthStation, 'head'), true);
+                assert.equal(firstLine.linkHead.val, fourthStation);
+                assert.equal(firstLine.linkHead.next.val, firstStation);
+                assert.equal(firstLine.linkHead.next.prev.val, fourthStation);
+            });
+            // firstLine 4<->1<->2<->3
+            it('should return false if we try to add 2nd station', function () {
+                assert.equal(firstLine.expand(secondStation, 'head'), false);
+                assert.equal(firstLine.expand(secondStation, 'tail'), false);
+            });
+            it('should form a ring if we try to add 4th station to the tail', function () {
+                assert.equal(firstLine.expand(fourthStation, 'tail'), true);
+                assert.equal(firstLine.linkHead.val, fourthStation);
+                assert.equal(firstLine.linkTail.val, fourthStation);
+            });
+        })
     })
 });

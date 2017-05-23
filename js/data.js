@@ -140,11 +140,37 @@ exports.MetroStation = MetroStation;
 class MetroLine extends Line {
     constructor(headStation, tailStation) {
         super();
-        this.linkHead = new LinkedList(headStation, null, null);
-        this.linkTail = new LinkedList(tailStation, null, null);
+        this.linkHead = new LinkedList(headStation);
+        this.linkTail = new LinkedList(tailStation);
         this.linkHead.append(this.linkTail);
         Data.regInterval(headStation, tailStation);
         Data.regLine(this);
+    }
+    /*
+     Return false if expand failed
+     Return true if succeed
+     direction => {'head', 'tail'}
+     */
+    expand(newStation, direction) {
+        if (direction !== 'head' && direction !== 'tail') {
+            return false;
+        }
+        let matchingNode = this.linkHead.match(newStation, 'forward');
+        if (direction === 'head') {
+            if (matchingNode && matchingNode !== this.linkTail) return false;
+            let newNode = new LinkedList(newStation);
+            newNode.append(this.linkHead);
+            this.linkHead = this.linkHead.prev;
+            return true;
+        }
+        else if (direction === 'tail') {
+            if (matchingNode && matchingNode !== this.linkHead) return false;
+            let newNode = new LinkedList(newStation);
+            this.linkTail.append(newNode);
+            this.linkTail = this.linkTail.next;
+            return true;
+        }
+        else return false;
     }
 }
 exports.MetroLine = MetroLine;
