@@ -100,8 +100,7 @@ describe('Data', function () {
                 assert.equal(firstLine.linkHead.next.val === firstLine.linkTail.val, true);
             });
             it("should add an interval to Data", function () {
-               assert.equal(DataCollection.Data.intervals[firstStation.id][secondStation.id], true);
-               assert.equal(DataCollection.Data.intervals[secondStation.id][firstStation.id], true);
+               assert.equal(DataCollection.Data.hasInterval(firstStation, secondStation, firstLine), true);
             });
             it('should be added an id by Data', function () {
                 assert.isNumber(firstLine.id);
@@ -138,6 +137,13 @@ describe('Data', function () {
                 assert.equal(firstLine.expand(fourthStation, 'tail'), true);
                 assert.equal(firstLine.linkHead.val, fourthStation);
                 assert.equal(firstLine.linkTail.val, fourthStation);
+            });
+            it('shuold update intervals in Data', function () {
+                assert.equal(DataCollection.Data.hasInterval(fourthStation, firstStation, firstLine), true);
+                assert.equal(DataCollection.Data.hasInterval(firstStation, secondStation, firstLine), true);
+                assert.equal(DataCollection.Data.hasInterval(secondStation, thirdStation, firstLine), true);
+                assert.equal(DataCollection.Data.hasInterval(thirdStation, fourthStation, firstLine), true);
+                assert.equal(DataCollection.Data.hasInterval(secondStation, fourthStation, firstLine), false);
             });
         })
     })

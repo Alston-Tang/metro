@@ -42,20 +42,46 @@ class Data{
             Data.boundary.y = Math.abs(y);
         }
     }
-    static regInterval(stationA, stationB) {
+    static regInterval(stationA, stationB, line) {
         if (Data.intervals[stationA.id] === undefined) {
             Data.intervals[stationA.id] = {};
         }
         if (Data.intervals[stationB.id] === undefined) {
             Data.intervals[stationB.id] = {};
         }
-        Data.intervals[stationA.id][stationB.id] = true;
-        Data.intervals[stationB.id][stationA.id] = true;
+        if (Data.intervals[stationA.id][stationB.id] === undefined) {
+            Data.intervals[stationA.id][stationB.id] = {};
+        }
+        if (Data.intervals[stationB.id][stationA.id] === undefined) {
+            Data.intervals[stationB.id][stationA.id] = {};
+        }
+        Data.intervals[stationA.id][stationB.id][line.id] = true;
+        Data.intervals[stationB.id][stationA.id][line.id] = true;
     }
-    
+    static removeInterval(stationA, stationB) {
+
+    }
+    /* Return true if succeed
+       Rerturn false if failed
+     */
     static regLine(line) {
+        if (!line.linkHead || !line.linkTail || line.linkHead === line.linkTail) {
+            return false;
+        }
         line.id = Data.nextLineId++;
         Data.lines[line.id] = line;
+        let cur = line.linkHead;
+        while (cur.next) {
+            Data.regInterval(cur.val, cur.next.val, line);
+            cur = cur.next;
+        }
+        return true;
+    }
+    static hasInterval(stationA, stationB, line) {
+        if (Data.intervals[stationA.id] === undefined || Data.intervals[stationB.id] === undefined) return false;
+        if (Data.intervals[stationA.id][stationB.id] === undefined || Data.intervals[stationB.id][stationA.id] === undefined) return false;
+        if (line === undefined) return true;
+        return (!!Data.intervals[stationA.id][stationB.id][line.id]) && (!!Data.intervals[stationB.id][stationA.id][line.id]);
     }
 }
 // Stations
@@ -143,7 +169,6 @@ class MetroLine extends Line {
         this.linkHead = new LinkedList(headStation);
         this.linkTail = new LinkedList(tailStation);
         this.linkHead.append(this.linkTail);
-        Data.regInterval(headStation, tailStation);
         Data.regLine(this);
     }
     /*
@@ -161,6 +186,7 @@ class MetroLine extends Line {
             let newNode = new LinkedList(newStation);
             newNode.append(this.linkHead);
             this.linkHead = this.linkHead.prev;
+            Data.regInterval(this.linkHead.val, this.linkHead.next.val, this);
             return true;
         }
         else if (direction === 'tail') {
@@ -168,9 +194,27 @@ class MetroLine extends Line {
             let newNode = new LinkedList(newStation);
             this.linkTail.append(newNode);
             this.linkTail = this.linkTail.next;
+            Data.regInterval(this.linkTail.prev.val, this.linkTail.val, this);
             return true;
         }
         else return false;
+    }
+    /*
+     Return false if expand failed
+     Return true if succeed
+     direction => {'head', 'tail'}
+     */
+    shrink(direction) {
+        if (this.linkHead.next === this.linkTail) {
+            //TODO Remove Line
+            return false;
+        }
+        if (direction === 'head') {
+            this.linkHead = this.linkHead.next;
+        }
+        else if (direction === 'tail') {
+            this.linkTail = this.linkTail.prev;
+        }
     }
 }
 exports.MetroLine = MetroLine;
