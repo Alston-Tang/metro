@@ -6,129 +6,157 @@
 
 let LinkedList = require('./datastructure').LinkedList;
 
+class MetroMap {
+    constructor() {
+        this.stations = {};
+        this.nextStationId = 0;
+        this.numTypes = {};
+        this.boundary = {x : 0, y : 0};
+        this.intervals = {};
+        this.lines = {};
+        this.nextLineId = 0;
+    }
+}
+exports.MetroMap = MetroMap;
 
-class Data{
-    constructor(){};
-    static regStation(station) {
-        station.id = Data.nextStationId++;
-        Data.stations[station.id] = station;
+function _mapCheck(target, thisArg, argList) {
+    if (Data.map !== null) {
+        return target.apply(thisArg, argList);
     }
-    static changeStationType(station, newType) {
-        if (Data._numTypes[newType] === undefined) {
-            Data._numTypes[newType] = 0;
+    throw "no map instance";
+}
+
+function mapCheckWrapper(fn) {
+    return new Proxy(fn, {
+        apply: _mapCheck
+    });
+}
+
+let Data = {
+    map : null,
+    useMap(map) {
+        this.map = map;
+    },
+    regStation : mapCheckWrapper(
+        function(station) {
+            station.id = Data.map.nextStationId++;
+            Data.map.stations[station.id] = station;
         }
-        if (station.type !== undefined) {
-            // _numTypes[station.type] is impossible to be undefined if station.type !== undefined
-            Data._numTypes[station.type]--;
+    ),
+    changeStationType : mapCheckWrapper(
+        function(station, newType) {
+            if (Data.map.numTypes[newType] === undefined) {
+                Data.map.numTypes[newType] = 0;
+            }
+            if (station.type !== undefined) {
+                // _numTypes[station.type] is impossible to be undefined if station.type !== undefined
+                Data.map.numTypes[station.type]--;
+            }
+            Data.map.numTypes[newType]++;
         }
-        Data._numTypes[newType]++;
-    }
+    ),
     /*
-        Return null if stationId is invalid
-        Return instance removed if succeed
-    */
-    static removeStation(stationId) {
-        if (! stationId in Data.stations) return null;
-        let stationToRemove = Data.stations[stationId];
-        delete Data.stations[stationId];
-        Data.numTypes[stationToRemove.type]--;
-        return stationToRemove;
-    }
-    static updateBoundary(x, y) {
-        if (x > Data.boundary.x || x < -Data.boundary.x) {
-            Data.boundary.x = Math.abs(x);
+     Return null if stationId is invalid
+     Return instance removed if succeed
+     */
+    removeStation : mapCheckWrapper(
+        function(stationId) {
+            if (! stationId in Data.map.stations) return null;
+            let stationToRemove = Data.map.stations[stationId];
+            delete Data.map.stations[stationId];
+            Data.map.numTypes[stationToRemove.type]--;
+            return stationToRemove;
         }
-        if (y > Data.boundary.y || y < -Data.boundary.y) {
-            Data.boundary.y = Math.abs(y);
+    ),
+    updateBoundary : mapCheckWrapper(
+        function (x, y) {
+            if (x > Data.map.boundary.x || x < -Data.map.boundary.x) {
+                Data.map.boundary.x = Math.abs(x);
+            }
+            if (y > Data.map.boundary.y || y < -Data.map.boundary.y) {
+                Data.map.boundary.y = Math.abs(y);
+            }
         }
-    }
-    static regInterval(stationA, stationB, line) {
-        if (Data.intervals[stationA.id] === undefined) {
-            Data.intervals[stationA.id] = {};
+    ),
+    regInterval : mapCheckWrapper(
+        function (stationA, stationB, line) {
+            if (Data.map.intervals[stationA.id] === undefined) {
+                Data.map.intervals[stationA.id] = {};
+            }
+            if (Data.map.intervals[stationB.id] === undefined) {
+                Data.map.intervals[stationB.id] = {};
+            }
+            if (Data.map.intervals[stationA.id][stationB.id] === undefined) {
+                Data.map.intervals[stationA.id][stationB.id] = {};
+            }
+            if (Data.map.intervals[stationB.id][stationA.id] === undefined) {
+                Data.map.intervals[stationB.id][stationA.id] = {};
+            }
+            Data.map.intervals[stationA.id][stationB.id][line.id] = true;
+            Data.map.intervals[stationB.id][stationA.id][line.id] = true;
         }
-        if (Data.intervals[stationB.id] === undefined) {
-            Data.intervals[stationB.id] = {};
-        }
-        if (Data.intervals[stationA.id][stationB.id] === undefined) {
-            Data.intervals[stationA.id][stationB.id] = {};
-        }
-        if (Data.intervals[stationB.id][stationA.id] === undefined) {
-            Data.intervals[stationB.id][stationA.id] = {};
-        }
-        Data.intervals[stationA.id][stationB.id][line.id] = true;
-        Data.intervals[stationB.id][stationA.id][line.id] = true;
-    }
-    static removeInterval(stationA, stationB) {
+    ),
+    removeInterval : mapCheckWrapper(
+        function removeInterval(stationA, stationB) {
 
-    }
+        }
+    ),
     /* Return true if succeed
        Rerturn false if failed
      */
-    static regLine(line) {
-        if (!line.linkHead || !line.linkTail || line.linkHead === line.linkTail) {
-            return false;
+    regLine : mapCheckWrapper(
+        function (line) {
+            if (!line.linkHead || !line.linkTail || line.linkHead === line.linkTail) {
+                return false;
+            }
+            line.id = Data.map.nextLineId++;
+            Data.map.lines[line.id] = line;
+            let cur = line.linkHead;
+            while (cur.next) {
+                Data.regInterval(cur.val, cur.next.val, line);
+                cur = cur.next;
+            }
+            return true;
         }
-        line.id = Data.nextLineId++;
-        Data.lines[line.id] = line;
-        let cur = line.linkHead;
-        while (cur.next) {
-            Data.regInterval(cur.val, cur.next.val, line);
-            cur = cur.next;
+    ),
+    hasInterval : mapCheckWrapper(
+        function (stationA, stationB, line) {
+            if (Data.map.intervals[stationA.id] === undefined || Data.map.intervals[stationB.id] === undefined) return false;
+            if (Data.map.intervals[stationA.id][stationB.id] === undefined || Data.map.intervals[stationB.id][stationA.id] === undefined) return false;
+            if (line === undefined) return true;
+            return (!!Data.map.intervals[stationA.id][stationB.id][line.id]) && (!!Data.map.intervals[stationB.id][stationA.id][line.id]);
         }
-        return true;
-    }
-    static hasInterval(stationA, stationB, line) {
-        if (Data.intervals[stationA.id] === undefined || Data.intervals[stationB.id] === undefined) return false;
-        if (Data.intervals[stationA.id][stationB.id] === undefined || Data.intervals[stationB.id][stationA.id] === undefined) return false;
-        if (line === undefined) return true;
-        return (!!Data.intervals[stationA.id][stationB.id][line.id]) && (!!Data.intervals[stationB.id][stationA.id][line.id]);
-    }
-}
-// Stations
-Data.stations = {};
-Data.nextStationId = 0;
-// numTypes
-Data._numTypes = {};
-Data.numTypes = new Proxy(Data._numTypes, {
+    )
+};
+Data.numTypes = new Proxy(Data, {
     get (receiver, name) {
-        return receiver[name] === undefined ? 0 : receiver[name];
+        return receiver.map.numTypes[name] === undefined ? 0 : receiver.map.numTypes[name];
     }
 });
-// Boundary
-Data.boundary = {x : 0, y : 0};
-// Intervals
-Data.intervals = {};
-// Lines
-Data.lines = {};
-Data.nextLineId = 0;
 exports.Data = Data;
 
-class Point extends Data{
+class Point{
     constructor(x, y) {
-        super();
         this.position = {x : x, y : y};
         Data.updateBoundary(x, y);
     }
 }
 exports.Point = Point;
 
-class Line extends Data {
+class Line {
     constructor() {
-        super();
     }
 }
 exports.Line = Line;
 
-class Area extends Data {
+class Area {
     constructor() {
-        super();
     }
 }
 exports.Area = Area;
 
-class Segment extends Data {
+class Segment {
     constructor() {
-        super();
     }
 }
 exports.Segment = Segment;
