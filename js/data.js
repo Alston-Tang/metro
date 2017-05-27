@@ -5,6 +5,10 @@
 'use strict';
 
 let LinkedList = require('./datastructure').LinkedList;
+let XMLDomClass = new require('xmldom').DOMImplementation;
+let XMLDom = new XMLDomClass();
+let XMLSerializer = require('xmldom').XMLSerializer;
+
 
 class MetroMap {
     constructor() {
@@ -126,7 +130,50 @@ let Data = {
             if (line === undefined) return true;
             return (!!Data.map.intervals[stationA.id][stationB.id][line.id]) && (!!Data.map.intervals[stationB.id][stationA.id][line.id]);
         }
-    )
+    ),
+    /*
+     type => {xml}
+     */
+    serialize: mapCheckWrapper(
+        function (type) {
+            switch (type) {
+                case "xml":
+                    return Data._serializeXML();
+            }
+        }
+    ),
+    _serializeXML: function () {
+        let doc = XMLDom.createDocument(null, "MetroMap");
+        let lines = doc.createElement("Lines");
+        let root = doc.createElement("Data");
+        let stations = doc.createElement("Stations");
+        root.appendChild(stations);
+        root.appendChild(lines);
+        // Insert Stations
+        for (let stationId in Data.map.stations) {
+            if (!Data.map.stations.hasOwnProperty(stationId))
+                continue;
+            let curStationNode = doc.createElement("Station");
+            curStationNode.setAttribute("id", stationId);
+            curStationNode.setAttribute("type", Data.map.stations[stationId].type);
+            stations.appendChild(curStationNode);
+        }
+        // Insert lines
+        for (let lineId in Data.map.lines) {
+            if (!Data.map.lines.hasOwnProperty(lineId))
+                continue;
+            let curLineNode = doc.createElement("Line");
+            let curStation = Data.map.lines[lineId].linkHead;
+            while (curStation) {
+                curLineNode.appendChild(doc.createElement(curStation.val.id));
+                curStation = curStation.next;
+            }
+            curLineNode.setAttribute("id", lineId);
+            lines.appendChild(curLineNode);
+        }
+        let xs = new XMLSerializer();
+        return xs.serializeToString(root);
+    }
 };
 Data.numTypes = new Proxy(Data, {
     get (receiver, name) {

@@ -4,6 +4,9 @@
 
 // Station creation
 
+let XMLSerializerClass = require('xmldom').XMLSerializer;
+let XMLSerializer = new XMLSerializerClass();
+
 let assert = require('chai').assert;
 
 let DataCollection = require('../js/data');
@@ -156,5 +159,12 @@ describe('Data', function () {
                 assert.equal(DataCollection.Data.hasInterval(secondStation, fourthStation, firstLine), false);
             });
         })
-    })
+    });
+    describe("Serialize", function () {
+        before(function () {
+        });
+        it('shuold pass test', function () {
+            assert.equal(1, 1);
+        })
+    });
 });
