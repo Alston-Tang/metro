@@ -8,6 +8,7 @@ let LinkedList = require('./datastructure').LinkedList;
 let XMLDomClass = new require('xmldom').DOMImplementation;
 let XMLDom = new XMLDomClass();
 let XMLSerializer = require('xmldom').XMLSerializer;
+let XMLParser = require('xmldom').DOMParser;
 
 
 class MetroMap {
@@ -41,9 +42,22 @@ let Data = {
     useMap(map) {
         this.map = map;
     },
+    /*
+    id => a hint what id should be assigned
+    throw error if id is already used
+     */
     regStation : mapCheckWrapper(
-        function(station) {
-            station.id = Data.map.nextStationId++;
+        function(station, id) {
+            if (id === undefined) {
+                id = Data.map.nextStationId++;
+            }
+            if (Data.map.stations[id] !== undefined) {
+                throw new Error("invalid id");
+            }
+            if (Data.map.nextStationId <= id) {
+                Data.map.nextStationId = id + 1;
+            }
+            station.id = id;
             Data.map.stations[station.id] = station;
         }
     ),
@@ -105,15 +119,28 @@ let Data = {
 
         }
     ),
-    /* Return true if succeed
-       Rerturn false if failed
+    /*
+        id => a hint what id should be assigned
+        throw error if id is already used
+        Return true if succeed
+        Return false if failed
      */
     regLine : mapCheckWrapper(
-        function (line) {
+        function (line, id) {
             if (!line.linkHead || !line.linkTail || line.linkHead === line.linkTail) {
                 return false;
             }
-            line.id = Data.map.nextLineId++;
+            if (id === undefined) {
+                id = Data.map.nextLineId++;
+            }
+            // TODO TEST CASE
+            if (Data.map.lines[id] !== undefined) {
+                throw new Error("invalid id");
+            }
+            if (Data.map.nextLineId <= id) {
+                Data.map.nextLineId = id + 1;
+            }
+            line.id = id;
             Data.map.lines[line.id] = line;
             let cur = line.linkHead;
             while (cur.next) {
@@ -134,6 +161,59 @@ let Data = {
     /*
      type => {xml}
      */
+    parse: function (type, str) {
+        switch (type) {
+            case 'xml':
+                return Data._parseXML(str);
+        }
+    },
+    _parseXML(str) {
+        let parser = new XMLParser();
+        let doc = parser.parseFromString(str);
+        if (!doc) return false;
+        if (!doc.documentElement) return false;
+        if (doc.documentElement.nodeName !== "MetroMap") return false;
+        let root = doc.documentElement;
+
+        Data.useMap(new MetroMap());
+
+        // Insert Stations
+        let stationsNode = doc.getElementsByTagName("Stations");
+        if (stationsNode.length !== 1) return false;
+        stationsNode = stationsNode[0];
+        for (let stationNode of stationsNode.childNodes) {
+            if (!stationNode.hasAttribute('id') || !stationNode.hasAttribute('type')) {
+                continue;
+            }
+            let positionNode = station.getElementsByTagName("Position");
+            if (positionNode.length !== 1) continue;
+            positionNode = positionNode[0];
+            if (!positionNode.hasAttribute('x') || !positionNode.hasAttribute('y')) continue;
+            let newStation = new MetroStation(
+                stationNode.getAttribute('type'),
+                parseFloat(positionNode.getAttribute('x')),
+                parseFloat(positionNode.getAttribute('y')),
+                parseInt(stationNode.getAttribute('id'))
+            );
+        }
+        // Insert Lines
+        let linesNode = doc.getElementsByTagName("Lines");
+        if (linesNode.length !== 1) return false;
+        linesNode = linesNode[0];
+        for (let lineNode of linesNode.childNodes) {
+            if (!lineNode.hasAttribute('id')) continue;
+            if (lineNode.childNodes.length < 2) continue;
+            let headStationId = parseInt(lineNode.childNodes[0].nodeName);
+            let tailStationId = parseInt(lineNode.childNodes[1].nodeName);
+            let newLine = new MetroLine(Data.map.stations[headStationId], Data.map.stations[tailStationId], parseInt(lineNode.getAttribute('id')));
+            let curId = 2;
+            while (curId < lineNode.childNodes.length) {
+                newLine.expand(Data.map.stations[parseInt(lineNode.childNodes[curId].getAttribute("refId"))], 'tail');
+                curId++;
+            }
+        }
+        return true;
+    },
     serialize: mapCheckWrapper(
         function (type) {
             switch (type) {
@@ -156,6 +236,10 @@ let Data = {
             let curStationNode = doc.createElement("Station");
             curStationNode.setAttribute("id", stationId);
             curStationNode.setAttribute("type", Data.map.stations[stationId].type);
+            let positionNode = doc.createElement("Position");
+            positionNode.setAttribute('x', Data.map.stations[stationId].position.x);
+            positionNode.setAttribute('y', Data.map.stations[stationId].position.y);
+            curStationNode.appendChild(positionNode);
             stations.appendChild(curStationNode);
         }
         // Insert lines
@@ -165,7 +249,9 @@ let Data = {
             let curLineNode = doc.createElement("Line");
             let curStation = Data.map.lines[lineId].linkHead;
             while (curStation) {
-                curLineNode.appendChild(doc.createElement(curStation.val.id));
+                let stationRef = doc.createElement("StationRef");
+                stationRef.setAttribute("refId", curStation.val.id);
+                curLineNode.appendChild(stationRef);
                 curStation = curStation.next;
             }
             curLineNode.setAttribute("id", lineId);
@@ -230,21 +316,21 @@ class MetroStation extends Point {
     get type() {
         return this._type;
     }
-    constructor(type, x, y) {
+    constructor(type, x, y, id) {
         super(x, y);
         this.type = type;
-        Data.regStation(this);
+        Data.regStation(this, id);
     }
 }
 exports.MetroStation = MetroStation;
 
 class MetroLine extends Line {
-    constructor(headStation, tailStation) {
+    constructor(headStation, tailStation, id) {
         super();
         this.linkHead = new LinkedList(headStation);
         this.linkTail = new LinkedList(tailStation);
         this.linkHead.append(this.linkTail);
-        Data.regLine(this);
+        Data.regLine(this, id);
     }
     /*
      Return false if expand failed

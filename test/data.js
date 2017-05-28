@@ -29,6 +29,7 @@ describe('Data', function () {
     let firstStation = null;
     let secondStation = null;
     let firstLine = null;
+    let secondLine = null;
     let dataTestMap = null;
     before(function () {
         dataTestMap = new DataCollection.MetroMap();
@@ -38,7 +39,7 @@ describe('Data', function () {
         describe("Create position", function () {
             before(function () {
                 firstStation = new DataCollection.MetroStation('triangle', 30, -25);
-                secondStation = new DataCollection.MetroStation('circle', 20, -25);
+                secondStation = new DataCollection.MetroStation('circle', 20, -25, 5);
             });
             it('should has correct position', function () {
                 assert.equal(firstStation.position.x, 30);
@@ -50,6 +51,14 @@ describe('Data', function () {
             });
         });
         describe("Create station", function () {
+            it ('should throw error for a wrong id hint', function () {
+                assert.throw(function () {
+                    new DataCollection.MetroStation('wrong', 0, 0, 0);
+                }, "invalid id");
+            });
+            it('should has correct nextStationId', function () {
+                assert.equal(Data.nextStationId, 6);
+            });
             it('should be added an id by Data', function () {
                 assert.isNumber(firstStation.id, "ID is " + firstStation.id);
             });
@@ -84,6 +93,7 @@ describe('Data', function () {
                 assert.equal(Data.numTypes[newType], numNewType + 1);
             });
         });
+        /*
         describe("Remove station", function () {
             let stationToRemove = null;
             let prevType = null;
@@ -101,11 +111,21 @@ describe('Data', function () {
                 assert.equal(Data.numTypes[prevType], numPrevType - 1);
             });
         });
+        */
     });
     describe("Line", function () {
         describe("Create line", function () {
             before(function () {
                 firstLine = new DataCollection.MetroLine(firstStation, secondStation);
+                secondLine = new DataCollection.MetroLine(firstStation, secondStation, 5);
+            });
+            it("should thorw error", function () {
+                assert.throw(function () {
+                    new DataCollection.MetroLine(firstStation, secondStation, 0);
+                }, "invalid id");
+            });
+            it("should have correct nextLineId", function () {
+                assert.equal(Data.nextLineId, 6);
             });
             it("should establish correct station link", function () {
                 assert.equal(firstLine.linkHead.val === firstStation, true);
@@ -160,11 +180,14 @@ describe('Data', function () {
             });
         })
     });
-    describe("Serialize", function () {
+    describe("Serialize and parse", function () {
         before(function () {
         });
-        it('shuold pass test', function () {
-            assert.equal(1, 1);
+        it('shuold be idempotent', function () {
+            let str = Data.serialize('xml');
+            Data.parse('xml', str);
+            let str2 = Data.serialize('xml');
+            assert.equal(str, str2);
         })
     });
 });
