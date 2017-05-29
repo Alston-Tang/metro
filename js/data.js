@@ -5,7 +5,7 @@
 'use strict';
 
 let LinkedList = require('./datastructure').LinkedList;
-let XMLDomClass = new require('xmldom').DOMImplementation;
+let XMLDomClass = require('xmldom').DOMImplementation;
 let XMLDom = new XMLDomClass();
 let XMLSerializer = require('xmldom').XMLSerializer;
 let XMLParser = require('xmldom').DOMParser;
