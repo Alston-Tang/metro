@@ -190,7 +190,7 @@ let Data = {
         let doc = parser.parseFromString(str);
         if (!doc) return false;
         if (!doc.documentElement) return false;
-        if (doc.documentElement.nodeName !== "MetroMap") return false;
+        if (doc.documentElement.nodeName !== "Data") return false;
         let root = doc.documentElement;
 
         Data.useMap(new MetroMap());
@@ -199,11 +199,13 @@ let Data = {
         let stationsNode = doc.getElementsByTagName("Stations");
         if (stationsNode.length !== 1) return false;
         stationsNode = stationsNode[0];
-        for (let stationNode of stationsNode.childNodes) {
+        for (let stationNode of Array.from(stationsNode.childNodes)) {
+            // Ignore text node : 1 => Element
+            if (stationNode.nodeType !== 1) continue;
             if (!stationNode.hasAttribute('id') || !stationNode.hasAttribute('type')) {
                 continue;
             }
-            let positionNode = station.getElementsByTagName("Position");
+            let positionNode = stationNode.getElementsByTagName("Position");
             if (positionNode.length !== 1) continue;
             positionNode = positionNode[0];
             if (!positionNode.hasAttribute('x') || !positionNode.hasAttribute('y')) continue;
@@ -218,15 +220,18 @@ let Data = {
         let linesNode = doc.getElementsByTagName("Lines");
         if (linesNode.length !== 1) return false;
         linesNode = linesNode[0];
-        for (let lineNode of linesNode.childNodes) {
+        for (let lineNode of Array.from(linesNode.childNodes)) {
+            // Ignore text node : 1 => Element
+            if (lineNode.nodeType !== 1) continue;
             if (!lineNode.hasAttribute('id')) continue;
-            if (lineNode.childNodes.length < 2) continue;
-            let headStationId = parseInt(lineNode.childNodes[0].nodeName);
-            let tailStationId = parseInt(lineNode.childNodes[1].nodeName);
+            let refStations = lineNode.getElementsByTagName('StationRef');
+            if (refStations.length < 2) continue;
+            let headStationId = parseInt(refStations[0].getAttribute('refId'));
+            let tailStationId = parseInt(refStations[1].getAttribute('refId'));
             let newLine = new MetroLine(Data.map.stations[headStationId], Data.map.stations[tailStationId], parseInt(lineNode.getAttribute('id')));
             let curId = 2;
-            while (curId < lineNode.childNodes.length) {
-                newLine.expand(Data.map.stations[parseInt(lineNode.childNodes[curId].getAttribute("refId"))], 'tail');
+            while (curId < refStations.length) {
+                newLine.expand(Data.map.stations[parseInt(refStations[curId].getAttribute("refId"))], 'tail');
                 curId++;
             }
         }
@@ -359,7 +364,7 @@ class MetroLine extends Line {
         if (direction !== 'head' && direction !== 'tail') {
             return false;
         }
-        let matchingNode = this.linkHead.match(newStation, 'forward');
+        let matchingNode = this.linkHead.match(newStation, 'toTail');
         if (direction === 'head') {
             if (matchingNode && matchingNode !== this.linkTail) return false;
             let newNode = new LinkedList(newStation);
@@ -379,7 +384,7 @@ class MetroLine extends Line {
         else return false;
     }
     /*
-     Return false if expand failed
+     Return false if failed
      Return true if succeed
      direction => {'head', 'tail'}
      */
@@ -404,6 +409,33 @@ class MetroLine extends Line {
                 throw new Error("remove line failed");
             }
         }
+        return true;
+    }
+    /*
+     Return false if failed
+     Return true if succeed
+     direction => {'head', 'tail'}
+     station => excluded after shrinking
+     */
+    shrinkToStation(direction, station) {
+        if (this.linkHead.match(station, 'toTail') === null) return false;
+        if (direction === 'head') {
+            let cur = this.linkHead;
+            while (cur.next !== null) {
+                this.shrink('head');
+                if (cur.val === station) break;
+                cur = cur.next;
+            }
+        }
+        else if(direction === 'tail') {
+            let cur = this.linkTail;
+            while (cur.prev !== null) {
+                this.shrink('tail');
+                if (cur.val === station) break;
+                cur = cur.prev;
+            }
+        }
+        else return false;
         return true;
     }
 }

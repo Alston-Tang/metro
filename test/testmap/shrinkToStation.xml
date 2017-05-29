@@ -1,0 +1,25 @@
+<Data>
+    <Stations>
+        <Station id="0" type="triangle">
+            <Position x="30" y="-25"/>
+        </Station>
+        <Station id="1" type="circle">
+            <Position x="20" y="-25"/>
+        </Station>
+        <Station id="2" type="rectangle">
+            <Position x="0" y="0"/>
+        </Station>
+        <Station id="3" type="star">
+            <Position x="0" y="-25"/>
+        </Station>
+    </Stations>
+    <Lines>
+        <Line id="0">
+            <StationRef refId="0"/>
+            <StationRef refId="1"/>
+            <StationRef refId="2"/>
+            <StationRef refId="3"/>
+            <StationRef refId="0"/>
+        </Line>
+    </Lines>
+</Data>

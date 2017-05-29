@@ -6,6 +6,7 @@
 
 let XMLSerializerClass = require('xmldom').XMLSerializer;
 let XMLSerializer = new XMLSerializerClass();
+let fs = require('fs');
 
 let assert = require('chai').assert;
 
@@ -214,6 +215,14 @@ describe('Data', function () {
             Data.parse('xml', str);
             let str2 = Data.serialize('xml');
             assert.equal(str, str2);
-        })
+        });
+        it('shuold be idempotent 2', function () {
+            let str = fs.readFileSync('test/testmap/shrinkToStation.xml', 'utf-8');
+            Data.parse('xml', str);
+            let str2 = Data.serialize('xml');
+            Data.parse(str2);
+            let str3 = Data.serialize('xml');
+            assert.equal(str2, str3);
+        });
     });
 });

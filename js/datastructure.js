@@ -8,17 +8,17 @@ class LinkedList {
     /*
      Return null if no matching
      Return LinkedList instance if matching
-     direction => {'forward', 'backward', 'bidirectional'}
+     direction => {'toTail', 'toHead', 'twoWay'}
      */
     match(val, direction) {
-        if (direction === 'forward' || direction === 'bidirectional') {
+        if (direction === 'toTail' || direction === 'twoWay') {
             let cur = this;
             while (cur) {
                 if (cur.val === val) return cur;
                 cur = cur.next;
             }
         }
-        if (direction === 'backward' || direction === 'bidirectional') {
+        if (direction === 'toHead' || direction === 'twoWay') {
             let cur = this;
             while (cur) {
                 if (cur.val === this.val) return cur;
