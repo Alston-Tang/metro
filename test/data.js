@@ -30,6 +30,8 @@ describe('Data', function () {
     let secondStation = null;
     let firstLine = null;
     let secondLine = null;
+    let thirdStation = null;
+    let fourthStation = null;
     let dataTestMap = null;
     before(function () {
         dataTestMap = new DataCollection.MetroMap();
@@ -143,8 +145,6 @@ describe('Data', function () {
             });
         });
         describe("Expand line", function () {
-            let thirdStation = null;
-            let fourthStation = null;
             before(function () {
                thirdStation = new DataCollection.MetroStation('rectangle', 0, 0);
                fourthStation = new DataCollection.MetroStation('rectangle', 0, -25);
@@ -171,14 +171,40 @@ describe('Data', function () {
                 assert.equal(firstLine.linkHead.val, fourthStation);
                 assert.equal(firstLine.linkTail.val, fourthStation);
             });
+            // firstLine 4<->1<->2<->3<->4
             it('shuold update intervals in Data', function () {
-                assert.equal(DataCollection.Data.hasInterval(fourthStation, firstStation, firstLine), true);
-                assert.equal(DataCollection.Data.hasInterval(firstStation, secondStation, firstLine), true);
-                assert.equal(DataCollection.Data.hasInterval(secondStation, thirdStation, firstLine), true);
-                assert.equal(DataCollection.Data.hasInterval(thirdStation, fourthStation, firstLine), true);
-                assert.equal(DataCollection.Data.hasInterval(secondStation, fourthStation, firstLine), false);
+                assert.equal(Data.hasInterval(fourthStation, firstStation, firstLine), true);
+                assert.equal(Data.hasInterval(firstStation, secondStation, firstLine), true);
+                assert.equal(Data.hasInterval(secondStation, thirdStation, firstLine), true);
+                assert.equal(Data.hasInterval(thirdStation, fourthStation, firstLine), true);
+                assert.equal(Data.hasInterval(secondStation, fourthStation, firstLine), false);
             });
-        })
+        });
+        describe("shrink line", function () {
+            it('should shrink stations chain and remove interval : head', function () {
+                assert.equal(firstLine.shrink('head'), true);
+                assert.equal(firstLine.linkHead.val, firstStation);
+                assert.equal(Data.hasInterval(firstStation, fourthStation, firstLine), false);
+            });
+            it("should shrink stations chain and remove interval : tail", function () {
+                assert.equal(firstLine.shrink('tail'), true);
+                assert.equal(firstLine.linkTail.val, thirdStation);
+                assert.equal(Data.hasInterval(fourthStation, thirdStation, firstLine), false);
+            });
+            // firstLine 1<->2<->3
+            it("should keep intervals correct", function () {
+                assert.equal(Data.hasInterval(firstStation, secondStation, firstLine), true);
+                assert.equal(Data.hasInterval(thirdStation, secondStation, firstLine), true);
+            });
+            it ('should remove line', function () {
+                assert.equal(firstLine.shrink('tail'), true);
+                assert.equal(firstLine.shrink('tail'), true);
+                assert.equal(Data.hasInterval(firstStation, secondStation, firstLine), false);
+                assert.equal(Data.hasInterval(thirdStation, secondStation, firstLine), false);
+                assert.equal(Data.lines[firstLine.id], undefined);
+                assert.equal(Object.keys(Data.lines).length, 1);
+            });
+        });
     });
     describe("Serialize and parse", function () {
         before(function () {

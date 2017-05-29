@@ -86,6 +86,17 @@ let Data = {
             return stationToRemove;
         }
     ),
+    removeLine : mapCheckWrapper(
+        function (lineId) {
+            if (! lineId in Data.map.lines) return null;
+            if (Data.map.lines[lineId].linkHead !== null || Data.map.lines[lineId].linkTail !== null) {
+                throw new Error("try to remove non-empty line");
+            }
+            let lineToRemove = Data.map.lines[lineId];
+            delete Data.map.lines[lineId];
+            return lineToRemove;
+        }
+    ),
     updateBoundary : mapCheckWrapper(
         function (x, y) {
             if (x > Data.map.boundary.x || x < -Data.map.boundary.x) {
@@ -114,9 +125,16 @@ let Data = {
             Data.map.intervals[stationB.id][stationA.id][line.id] = true;
         }
     ),
+    /*
+     Return true if succeed
+     Return false if interval not exists
+     */
     removeInterval : mapCheckWrapper(
-        function removeInterval(stationA, stationB) {
-
+        function removeInterval(stationA, stationB, line) {
+            if (!Data.hasInterval(stationA, stationB, line)) return false;
+            delete Data.map.intervals[stationA.id][stationB.id][line.id];
+            delete Data.map.intervals[stationB.id][stationA.id][line.id];
+            return true;
         }
     ),
     /*
@@ -366,16 +384,27 @@ class MetroLine extends Line {
      direction => {'head', 'tail'}
      */
     shrink(direction) {
-        if (this.linkHead.next === this.linkTail) {
-            //TODO Remove Line
-            return false;
-        }
         if (direction === 'head') {
+            if (!Data.removeInterval(this.linkHead.val, this.linkHead.next.val, this)) {
+                return false;
+            }
             this.linkHead = this.linkHead.next;
         }
-        else if (direction === 'tail') {
+        else if(direction === 'tail') {
+            if (!Data.removeInterval(this.linkTail.val, this.linkTail.prev.val, this)) {
+                return false;
+            }
             this.linkTail = this.linkTail.prev;
         }
+        else return false;
+        if (this.linkHead === this.linkTail) {
+            this.linkHead = null;
+            this.linkTail = null;
+            if (!Data.removeLine(this.id)) {
+                throw new Error("remove line failed");
+            }
+        }
+        return true;
     }
 }
 exports.MetroLine = MetroLine;
