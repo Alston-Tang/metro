@@ -206,6 +206,19 @@ describe('Data', function () {
                 assert.equal(Object.keys(Data.lines).length, 1);
             });
         });
+        describe("shrink line to station", function () {
+            before(function () {
+                let str = fs.readFileSync('test/testmap/shrinkToStation.xml', 'utf-8');
+                Data.parse('xml', str);
+                // Line 0<->1<->2<->3<->0
+                Data.lines[0].shrinkToStation('tail', Data.map.stations[2]);
+                // Line 0<->1
+            });
+            it('should shrink line from tail to station 2', function () {
+                assert.equal(Data.lines[0].linkHead.val, Data.stations[0]);
+                assert.equal(Data.lines[0].linkTail.val, Data.stations[1]);
+            });
+        });
     });
     describe("Serialize and parse", function () {
         before(function () {
