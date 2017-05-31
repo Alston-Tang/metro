@@ -98,3 +98,4 @@ fabric.properties
 
 dist/
 node_modules/
+test/html/bundle.js

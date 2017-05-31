@@ -7,14 +7,18 @@
 exports = {};
 
 class Player {
-    constructor(canvasDom) {
+    constructor(canvasDom, data) {
         this.canvas = canvasDom;
+        this.data = data;
     }
     get height() {
         return this.canvas.height;
     }
     get width() {
         return this.canvas.width;
+    }
+    arrangeStations() {
+
     }
 }
 exports.Player = Player;
