@@ -5,8 +5,8 @@
 
 let assert = require('chai').assert;
 
-let DataCollection = require('../js/data');
-let Display = require('../js/display');
+let DataCollection = require('../../js/data');
+let Display = require('../../js/display');
 
 describe("Construct player", function () {
     let player = null;
