@@ -110,7 +110,7 @@ describe('Data', function () {
             it ('should set field to undefined', function () {
                 assert.equal(Data.stations[stationToRemove.id] === undefined, true);
             });
-            it ('shuold decrease type count', function () {
+            it ('should decrease type count', function () {
                 assert.equal(Data.numTypes[prevType], numPrevType - 1);
             });
         });
@@ -122,7 +122,7 @@ describe('Data', function () {
                 firstLine = new DataCollection.MetroLine(firstStation, secondStation);
                 secondLine = new DataCollection.MetroLine(firstStation, secondStation, 5);
             });
-            it("should thorw error", function () {
+            it("should throw error", function () {
                 assert.throw(function () {
                     new DataCollection.MetroLine(firstStation, secondStation, 0);
                 }, "invalid id");
@@ -173,7 +173,7 @@ describe('Data', function () {
                 assert.equal(firstLine.linkTail.val, fourthStation);
             });
             // firstLine 4<->1<->2<->3<->4
-            it('shuold update intervals in Data', function () {
+            it('should update intervals in Data', function () {
                 assert.equal(Data.hasInterval(fourthStation, firstStation, firstLine), true);
                 assert.equal(Data.hasInterval(firstStation, secondStation, firstLine), true);
                 assert.equal(Data.hasInterval(secondStation, thirdStation, firstLine), true);
@@ -223,13 +223,13 @@ describe('Data', function () {
     describe("Serialize and parse", function () {
         before(function () {
         });
-        it('shuold be idempotent', function () {
+        it('should be idempotent', function () {
             let str = Data.serialize('xml');
             Data.parse('xml', str);
             let str2 = Data.serialize('xml');
             assert.equal(str, str2);
         });
-        it('shuold be idempotent 2', function () {
+        it('should be idempotent 2', function () {
             let str = fs.readFileSync('test/testmap/shrinkToStation.xml', 'utf-8');
             Data.parse('xml', str);
             let str2 = Data.serialize('xml');

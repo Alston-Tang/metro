@@ -5,7 +5,7 @@
 'use strict';
 
 let LinkedList = require('./datastructure').LinkedList;
-let XMLDomClass = new require('xmldom').DOMImplementation;
+let XMLDomClass = require('xmldom').DOMImplementation;
 let XMLDom = new XMLDomClass();
 let XMLSerializer = require('xmldom').XMLSerializer;
 let XMLParser = require('xmldom').DOMParser;
@@ -151,7 +151,6 @@ let Data = {
             if (id === undefined) {
                 id = Data.map.nextLineId++;
             }
-            // TODO TEST CASE
             if (Data.map.lines[id] !== undefined) {
                 throw new Error("invalid id");
             }
@@ -191,7 +190,6 @@ let Data = {
         if (!doc) return false;
         if (!doc.documentElement) return false;
         if (doc.documentElement.nodeName !== "Data") return false;
-        let root = doc.documentElement;
 
         Data.useMap(new MetroMap());
 
@@ -209,7 +207,7 @@ let Data = {
             if (positionNode.length !== 1) continue;
             positionNode = positionNode[0];
             if (!positionNode.hasAttribute('x') || !positionNode.hasAttribute('y')) continue;
-            let newStation = new MetroStation(
+            new MetroStation(
                 stationNode.getAttribute('type'),
                 parseFloat(positionNode.getAttribute('x')),
                 parseFloat(positionNode.getAttribute('y')),
