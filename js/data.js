@@ -14,6 +14,13 @@ let XMLParser = require('xmldom').DOMParser;
 class MetroMap {
     constructor() {
         this.stations = {};
+        this.stations[Symbol.iterator] = function*() {
+            for (let id in this) {
+                if (this.hasOwnProperty(id)) {
+                    yield id;
+                }
+            }
+        };
         this.nextStationId = 0;
         this.numTypes = {};
         this.boundary = {x : 0, y : 0};
@@ -283,9 +290,14 @@ let Data = {
     }
 };
 Data.numTypes = new Proxy(Data, {
-    get (receiver, name) {
+    get : function (receiver, name) {
         return receiver.map.numTypes[name] === undefined ? 0 : receiver.map.numTypes[name];
     }
+});
+Data.stations = new Proxy(Data, {
+    get : mapCheckWrapper(function(receiver, name) {
+        return receiver.map.stations[name];
+    })
 });
 exports.Data = Data;
 

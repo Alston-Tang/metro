@@ -10,7 +10,8 @@ let DataCollection = require('../js/data');
 describe("NullData", function () {
     it('should throw error', function () {
         assert.throw(function () {
-            DataCollection.Data.regStation(new DataCollection.MetroStation('error', 0, 0));
+            DataCollection.Data.map = null;
+            new DataCollection.MetroStation('error', 0, 0);
         }, "no map instance");
     });
 });

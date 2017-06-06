@@ -19,10 +19,8 @@ let Data = new Proxy(DataCollection.Data, {get(receiver, name){
 }});
 
 function getArbitraryStation() {
-    for (let id in Data.stations) {
-        if (Data.stations.hasOwnProperty(id)) {
-            return Data.stations[id];
-        }
+    for (let id of Data.map.stations) {
+        return Data.stations[id];
     }
     return null;
 }
@@ -237,5 +235,16 @@ describe('Data', function () {
             let str3 = Data.serialize('xml');
             assert.equal(str2, str3);
         });
+    });
+    describe("Public port", function () {
+        let str = fs.readFileSync('test/testmap/shrinkToStation.xml', 'utf-8');
+        Data.parse('xml', str);
+        let pass = true;
+        for (let stationId in Data.map.stations) {
+            if (!Data.map.stations.hasOwnProperty(stationId))
+                continue;
+            pass = pass && (Data.map.stations[stationId] === Data.stations[stationId]);
+        }
+        assert.equal(pass, true);
     });
 });
